@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlockForge SMP — Rank Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a href="#top" class="brand">
+      <span class="brand__block" aria-hidden="true"></span>
+      <span class="brand__text">BlockForge<em>SMP</em></span>
+    </a>
+
+    <nav class="nav" id="nav">
+      <a href="#ranks">Ranks</a>
+      <a href="#perks">Perks</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <button class="ip-copy" id="ipCopy" type="button">
+      <span class="ip-copy__label">play.blockforge.net</span>
+      <span class="ip-copy__hint">click to copy</span>
+    </button>
+
+    <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero__grid" aria-hidden="true"></div>
+    <div class="hero__content">
+      <p class="eyebrow">Season 4 — Now Live</p>
+      <h1 class="hero__title">
+        Own the <span class="hl">server.</span><br>
+        Not just a name tag.
+      </h1>
+      <p class="hero__sub">
+        Ranks on BlockForge unlock real tools for real builders — extra plots, /fly, custom pets,
+        and crafting recipes you won't find anywhere else in the overworld.
+      </p>
+      <div class="hero__cta">
+        <a href="#ranks" class="btn btn--primary">View ranks</a>
+        <button class="btn btn--ghost" id="heroIpBtn" type="button">Copy server IP</button>
+      </div>
+    </div>
+    <div class="hero__chest" aria-hidden="true">
+      <div class="chest">
+        <div class="chest__lid"></div>
+        <div class="chest__body"></div>
+        <div class="chest__lock"></div>
+        <div class="chest__glow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RANKS -->
+  <section class="ranks" id="ranks">
+    <div class="section__head">
+      <p class="eyebrow">The Shop</p>
+      <h2>Choose your rank</h2>
+      <p class="section__sub">One-time purchase. Perks apply instantly on next login, no server restart needed.</p>
+    </div>
+
+    <div class="rank-grid" id="rankGrid">
+      <!-- cards injected by script.js -->
+    </div>
+  </section>
+
+  <!-- PERKS DETAIL -->
+  <section class="perks" id="perks">
+    <div class="section__head">
+      <p class="eyebrow">Compare</p>
+      <h2>What's in every crate</h2>
+    </div>
+
+    <div class="table-wrap">
+      <table class="perk-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th><span class="tag tag--miner">Miner</span></th>
+            <th><span class="tag tag--knight">Knight</span></th>
+            <th><span class="tag tag--wizard">Wizard</span></th>
+            <th><span class="tag tag--ender">Ender Lord</span></th>
+          </tr>
+        </thead>
+        <tbody id="perkTableBody">
+          <!-- rows injected by script.js -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq" id="faq">
+    <div class="section__head">
+      <p class="eyebrow">Good to know</p>
+      <h2>Frequently asked</h2>
+    </div>
+
+    <div class="faq-list" id="faqList">
+      <!-- accordion items injected by script.js -->
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="brand brand--footer">
+      <span class="brand__block" aria-hidden="true"></span>
+      <span class="brand__text">BlockForge<em>SMP</em></span>
+    </div>
+    <p>Purchases support server hosting, not pay-to-win advantages. No gameplay stat boosts are ever sold.</p>
+    <p class="footer__copy">© 2026 BlockForge SMP. Not affiliated with Mojang or Microsoft.</p>
+  </div>
+</footer>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal__panel">
+    <button class="modal__close" id="modalClose" aria-label="Close">✕</button>
+    <div class="modal__head">
+      <span class="modal__rank-swatch" id="modalSwatch"></span>
+      <div>
+        <p class="eyebrow" id="modalEyebrow">Selected rank</p>
+        <h3 id="modalTitle">Rank name</h3>
+      </div>
+    </div>
+    <label class="field">
+      <span>Minecraft username</span>
+      <input type="text" id="modalUsername" placeholder="Steve123" maxlength="16" autocomplete="off">
+    </label>
+    <div class="modal__price-row">
+      <span>Total</span>
+      <span id="modalPrice">$0.00</span>
+    </div>
+    <button class="btn btn--primary btn--full" id="modalConfirm">Confirm purchase</button>
+    <p class="modal__note">Demo checkout — no payment is actually processed.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

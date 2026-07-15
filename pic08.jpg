@@ -1,0 +1,152 @@
+/* =========================================================
+   BLOCKFORGE SHARED STORE
+   Both the storefront (script.js) and the admin panel
+   (admin.js) read/write through this file so changes made
+   in the admin panel show up on the live site instantly.
+
+   Everything lives in localStorage on the visitor's own
+   browser — there's no real backend here. Wire this up to
+   an actual database/API when you're ready to go live.
+   ========================================================= */
+
+const STORE_KEYS = {
+  ranks: "bf_ranks",
+  settings: "bf_settings",
+  orders: "bf_orders",
+};
+
+const DEFAULT_RANKS = [
+  {
+    id: "miner",
+    name: "Miner",
+    tagline: "For players who just want more room to build.",
+    price: 4.99,
+    featured: false,
+    badge: "",
+    perks: [
+      "2 extra claimable plots",
+      "/hat and /nick commands",
+      "Colored chat name tag",
+      "Access to #miner Discord channel",
+    ],
+  },
+  {
+    id: "knight",
+    name: "Knight",
+    tagline: "Extra tools for PvP and adventuring.",
+    price: 9.99,
+    featured: false,
+    badge: "",
+    perks: [
+      "Everything in Miner",
+      "/fly in your own claim",
+      "1 custom crafting recipe slot",
+      "Priority queue on full servers",
+      "Monthly cosmetic crate key",
+    ],
+  },
+  {
+    id: "wizard",
+    name: "Wizard",
+    tagline: "Enchanting perks for the serious builder.",
+    price: 19.99,
+    featured: true,
+    badge: "Most popular",
+    perks: [
+      "Everything in Knight",
+      "/fly anywhere on the server",
+      "Personal /warp for friends to visit",
+      "3 custom crafting recipe slots",
+      "Exclusive wizard robe cosmetic",
+      "Weekly cosmetic crate key",
+    ],
+  },
+  {
+    id: "ender",
+    name: "Ender Lord",
+    tagline: "The full crate. Top-tier cosmetics and access.",
+    price: 34.99,
+    featured: false,
+    badge: "",
+    perks: [
+      "Everything in Wizard",
+      "Custom particle trail",
+      "Private End-themed hub plot",
+      "Early access to new cosmetic drops",
+      "Direct line to the build team",
+      "Daily cosmetic crate key",
+    ],
+  },
+];
+
+const DEFAULT_SETTINGS = {
+  serverIp: "play.blockforge.net",
+  discordUrl: "https://discord.gg/blockforge",
+};
+
+// A few seed orders so the admin panel isn't empty on first load.
+const DEFAULT_ORDERS = [
+  { id: "ord_1001", username: "Steve123", rankId: "wizard", price: 19.99, status: "fulfilled", createdAt: "2026-07-10T14:22:00Z" },
+  { id: "ord_1002", username: "EnderQueen", rankId: "ender", price: 34.99, status: "fulfilled", createdAt: "2026-07-11T09:05:00Z" },
+  { id: "ord_1003", username: "CreeperFan99", rankId: "miner", price: 4.99, status: "pending", createdAt: "2026-07-13T20:41:00Z" },
+];
+
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return structuredClone(fallback);
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error(`Store read failed for ${key}:`, err);
+    return structuredClone(fallback);
+  }
+}
+
+function writeJSON(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (err) {
+    console.error(`Store write failed for ${key}:`, err);
+    return false;
+  }
+}
+
+const Store = {
+  getRanks() {
+    return readJSON(STORE_KEYS.ranks, DEFAULT_RANKS);
+  },
+  saveRanks(ranks) {
+    return writeJSON(STORE_KEYS.ranks, ranks);
+  },
+  resetRanks() {
+    return writeJSON(STORE_KEYS.ranks, DEFAULT_RANKS);
+  },
+
+  getSettings() {
+    return readJSON(STORE_KEYS.settings, DEFAULT_SETTINGS);
+  },
+  saveSettings(settings) {
+    return writeJSON(STORE_KEYS.settings, settings);
+  },
+
+  getOrders() {
+    return readJSON(STORE_KEYS.orders, DEFAULT_ORDERS);
+  },
+  saveOrders(orders) {
+    return writeJSON(STORE_KEYS.orders, orders);
+  },
+  addOrder(order) {
+    const orders = Store.getOrders();
+    orders.unshift(order);
+    writeJSON(STORE_KEYS.orders, orders);
+    return orders;
+  },
+  updateOrderStatus(orderId, status) {
+    const orders = Store.getOrders();
+    const target = orders.find((o) => o.id === orderId);
+    if (target) target.status = status;
+    writeJSON(STORE_KEYS.orders, orders);
+    return orders;
+  },
+};

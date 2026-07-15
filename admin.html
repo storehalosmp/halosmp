@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HALO SMP — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky:#4FC3F7; --sky-deep:#0288D1; --sky-mid:#29B6F6;
+    --ice:#B3E5FC; --bg:#F0F9FF; --white:#FFFFFF;
+    --navy:#0D3B54; --navy-soft:#3E6B82;
+    --green:#2E9E5B; --red:#D64545; --amber:#D6942A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Poppins',sans-serif; background:var(--bg); color:var(--navy); }
+  a{ text-decoration:none; color:inherit; }
+  ::selection{ background:var(--sky); color:var(--white); }
+  button{ font-family:inherit; }
+
+  .layout{ display:flex; min-height:100vh; }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:250px; flex-shrink:0; background:var(--navy); color:var(--ice);
+    display:flex; flex-direction:column; padding:26px 18px; gap:6px;
+    position:sticky; top:0; height:100vh;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; padding:6px 10px 26px; }
+  .brand-mark{
+    width:30px; height:30px; background:var(--sky);
+    clip-path: polygon(20% 0,80% 0,100% 20%,100% 80%,80% 100%,20% 100%,0 80%,0 20%);
+  }
+  .brand-name{ font-family:'Press Start 2P',monospace; font-size:11px; color:var(--white); }
+  .brand-sub{ font-size:10px; color:var(--sky); letter-spacing:2px; margin-top:2px; }
+
+  .nav-item{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; font-weight:600; font-size:14px;
+    color:var(--ice); cursor:pointer; border-left:3px solid transparent; transition:.15s;
+  }
+  .nav-item .ico{ width:18px; text-align:center; font-family:'JetBrains Mono',monospace; color:var(--sky); }
+  .nav-item:hover{ background:rgba(255,255,255,0.06); }
+  .nav-item.active{ background:rgba(79,195,247,0.15); border-left-color:var(--sky); color:var(--white); }
+
+  .sidebar-foot{ margin-top:auto; padding:14px 10px; font-size:11px; color:#7FA6BB; font-family:'JetBrains Mono',monospace; }
+
+  /* ---------- MAIN ---------- */
+  .main{ flex-grow:1; min-width:0; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 34px; background:var(--white); border-bottom:2px solid var(--ice);
+    position:sticky; top:0; z-index:10;
+  }
+  .topbar h1{ font-family:'Press Start 2P',monospace; font-size:16px; color:var(--navy); }
+  .topbar-right{ display:flex; align-items:center; gap:18px; }
+  .admin-chip{
+    display:flex; align-items:center; gap:10px; background:var(--bg); border:2px solid var(--ice);
+    padding:6px 14px 6px 6px; font-size:13px; font-weight:600;
+  }
+  .admin-chip .avatar{ width:26px; height:26px; background:var(--sky); clip-path: polygon(20% 0,80% 0,100% 20%,100% 80%,80% 100%,20% 100%,0 80%,0 20%); }
+
+  .view{ padding:32px 34px 60px; display:none; }
+  .view.active{ display:block; }
+
+  .section-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:14px; }
+  .section-title h2{ font-family:'Press Start 2P',monospace; font-size:15px; color:var(--navy); }
+  .section-title p{ font-size:13px; color:var(--navy-soft); margin-top:6px; }
+
+  /* ---------- STAT CARDS ---------- */
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:36px; }
+  .stat-card{
+    background:var(--white); border:2px solid var(--ice); padding:22px; box-shadow:6px 6px 0 var(--ice);
+  }
+  .stat-card .label{ font-size:12px; color:var(--navy-soft); font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+  .stat-card .value{ font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:700; color:var(--sky-deep); margin-top:8px; }
+  .stat-card .delta{ font-size:12px; margin-top:6px; font-weight:600; }
+  .delta.up{ color:var(--green); } .delta.down{ color:var(--red); }
+
+  /* ---------- PANEL / TABLE ---------- */
+  .panel{ background:var(--white); border:2px solid var(--ice); margin-bottom:30px; }
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:2px solid var(--bg); flex-wrap:wrap; gap:10px; }
+  .panel-head h3{ font-size:15px; color:var(--navy); }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{
+    text-align:left; padding:12px 22px; background:var(--bg); color:var(--navy-soft);
+    font-weight:700; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+  }
+  tbody td{ padding:14px 22px; border-top:1px solid var(--bg); color:var(--navy); vertical-align:middle; }
+  tbody tr:hover{ background:#FAFDFF; }
+
+  .badge{ font-size:11px; font-weight:700; padding:4px 10px; display:inline-block; }
+  .badge.paid{ background:#E1F6E9; color:var(--green); }
+  .badge.pending{ background:#FDF1DE; color:var(--amber); }
+  .badge.refunded{ background:#FBE4E4; color:var(--red); }
+  .badge.online{ background:#E1F6E9; color:var(--green); }
+  .badge.offline{ background:#F0F1F2; color:#7A7A7A; }
+
+  .rank-pill{ display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:12px; padding:5px 10px; background:var(--bg); color:var(--sky-deep); border:1px solid var(--ice); }
+
+  .icon-btn{
+    background:none; border:2px solid var(--ice); width:30px; height:30px; cursor:pointer;
+    color:var(--navy-soft); font-size:13px; transition:.15s; margin-left:6px;
+  }
+  .icon-btn:hover{ border-color:var(--sky); color:var(--sky-deep); }
+  .icon-btn.danger:hover{ border-color:var(--red); color:var(--red); }
+
+  .btn-primary{
+    background:var(--sky-deep); color:var(--white); font-weight:700; font-size:13px; border:2px solid var(--navy);
+    padding:10px 18px; cursor:pointer; box-shadow:4px 4px 0 var(--navy); transition:.15s;
+  }
+  .btn-primary:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--navy); }
+  .btn-ghost{
+    background:var(--white); color:var(--navy); font-weight:700; font-size:13px; border:2px solid var(--ice);
+    padding:9px 16px; cursor:pointer; transition:.15s;
+  }
+  .btn-ghost:hover{ border-color:var(--sky); color:var(--sky-deep); }
+
+  .search-input{
+    border:2px solid var(--ice); padding:9px 14px; font-size:13px; font-family:inherit; width:220px; background:var(--white);
+  }
+  .search-input:focus{ outline:none; border-color:var(--sky); }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(13,59,84,0.45); display:none;
+    align-items:center; justify-content:center; z-index:1000; padding:20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{
+    background:var(--white); border:2px solid var(--navy); width:100%; max-width:420px;
+    box-shadow:10px 10px 0 var(--sky);
+  }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:2px solid var(--bg); }
+  .modal-head h3{ font-size:15px; }
+  .modal-close{ background:none; border:none; font-size:18px; cursor:pointer; color:var(--navy-soft); }
+  .modal-body{ padding:22px; display:flex; flex-direction:column; gap:14px; }
+  .field label{ font-size:12px; font-weight:700; color:var(--navy-soft); display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;}
+  .field input, .field textarea{
+    width:100%; border:2px solid var(--ice); padding:10px 12px; font-family:inherit; font-size:14px; background:var(--bg);
+  }
+  .field input:focus, .field textarea:focus{ outline:none; border-color:var(--sky); }
+  .modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:2px solid var(--bg); }
+
+  .empty{ text-align:center; padding:50px 20px; color:var(--navy-soft); font-size:13px; }
+
+  .toast{
+    position:fixed; bottom:26px; right:26px; background:var(--navy); color:var(--white);
+    padding:14px 20px; font-size:13px; font-weight:600; box-shadow:6px 6px 0 var(--sky);
+    transform:translateY(20px); opacity:0; transition:.25s; z-index:2000;
+  }
+  .toast.show{ transform:translateY(0); opacity:1; }
+
+  @media(max-width:900px){
+    .sidebar{ width:70px; }
+    .brand-name, .brand-sub, .nav-item span.label-text, .sidebar-foot{ display:none; }
+    .nav-item{ justify-content:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">HALO SMP</div>
+        <div class="brand-sub">ADMIN</div>
+      </div>
+    </div>
+
+    <div class="nav-item active" data-view="dashboard"><span class="ico">#</span><span class="label-text">Dashboard</span></div>
+    <div class="nav-item" data-view="ranks"><span class="ico">$</span><span class="label-text">Ranks</span></div>
+    <div class="nav-item" data-view="orders"><span class="ico">&gt;</span><span class="label-text">Orders</span></div>
+    <div class="nav-item" data-view="players"><span class="ico">@</span><span class="label-text">Players</span></div>
+    <div class="nav-item" data-view="settings"><span class="ico">*</span><span class="label-text">Settings</span></div>
+
+    <div class="sidebar-foot">v1.0 · local admin<br>data stored in-browser</div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">DASHBOARD</h1>
+      <div class="topbar-right">
+        <div class="admin-chip"><div class="avatar"></div> Owner</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="section-title">
+        <div>
+          <h2>Overview</h2>
+          <p>Snapshot of store performance</p>
+        </div>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Recent orders</h3><span style="font-size:12px;color:var(--navy-soft);">Last 5</span></div>
+        <table>
+          <thead><tr><th>Player</th><th>Rank</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="recentOrdersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RANKS -->
+    <section class="view" id="view-ranks">
+      <div class="section-title">
+        <div>
+          <h2>Ranks</h2>
+          <p>Create, edit, and price the ranks sold on your store</p>
+        </div>
+        <button class="btn-primary" onclick="openRankModal()">+ New Rank</button>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Rank</th><th>Price</th><th>Perks</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+          <tbody id="ranksBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="view" id="view-orders">
+      <div class="section-title">
+        <div>
+          <h2>Orders</h2>
+          <p>All rank purchases</p>
+        </div>
+        <input class="search-input" id="orderSearch" placeholder="Search player...">
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Order ID</th><th>Player</th><th>Rank</th><th>Amount</th><th>Status</th><th>Date</th><th style="text-align:right;">Actions</th></tr></thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PLAYERS -->
+    <section class="view" id="view-players">
+      <div class="section-title">
+        <div>
+          <h2>Players</h2>
+          <p>Everyone who has purchased on the store</p>
+        </div>
+        <input class="search-input" id="playerSearch" placeholder="Search username...">
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Username</th><th>Current rank</th><th>Total spent</th><th>Orders</th><th>Status</th></tr></thead>
+          <tbody id="playersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="section-title">
+        <div>
+          <h2>Settings</h2>
+          <p>Store configuration</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="modal-body">
+          <div class="field">
+            <label>Server IP</label>
+            <input id="settingIp" type="text">
+          </div>
+          <div class="field">
+            <label>Store name</label>
+            <input id="settingName" type="text">
+          </div>
+          <div class="field">
+            <label>Support Discord invite</label>
+            <input id="settingDiscord" type="text" placeholder="https://discord.gg/...">
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-primary" onclick="saveSettings()">Save changes</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- RANK MODAL -->
+<div class="modal-overlay" id="rankModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="rankModalTitle">New rank</h3>
+      <button class="modal-close" onclick="closeRankModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Rank name</label><input id="rankName" placeholder="e.g. Ranger"></div>
+      <div class="field"><label>Price (USD)</label><input id="rankPrice" type="number" step="0.01" placeholder="11.99"></div>
+      <div class="field"><label>Perks (one per line)</label><textarea id="rankPerks" rows="4" placeholder="/fly&#10;5 extra homes&#10;Custom join message"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeRankModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveRank()">Save rank</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- STATE ---------------- */
+const STORAGE_KEY = 'halo_smp_admin_data_v1';
+
+function defaultData(){
+  return {
+    settings:{ ip:'play.halosmp.net', name:'HALO SMP', discord:'https://discord.gg/halosmp' },
+    ranks:[
+      {id:1, name:'Scout', price:4.99, perks:['Colored name tag','/hat & /kit scout','2 extra homes'], active:true},
+      {id:2, name:'Ranger', price:11.99, perks:['Everything in Scout','/fly in claimed land','5 extra homes & /back'], active:true},
+      {id:3, name:'Warden', price:19.99, perks:['Everything in Ranger','10 extra homes','/nick & particle trails'], active:true},
+      {id:4, name:'Archon', price:34.99, perks:['Everything in Warden','Unlimited homes','Personal /warp shop stall'], active:true},
+    ],
+    orders:[
+      {id:'ORD-1042', player:'Ferrikz', rank:'Ranger', amount:11.99, status:'paid', date:'2026-07-14'},
+      {id:'ORD-1041', player:'Bloxwich', rank:'Scout', amount:4.99, status:'paid', date:'2026-07-14'},
+      {id:'ORD-1040', player:'NovaDusk', rank:'Archon', amount:34.99, status:'pending', date:'2026-07-13'},
+      {id:'ORD-1039', player:'Ferrikz', rank:'Scout', amount:4.99, status:'refunded', date:'2026-07-10'},
+      {id:'ORD-1038', player:'Quillfeather', rank:'Warden', amount:19.99, status:'paid', date:'2026-07-09'},
+      {id:'ORD-1037', player:'Bloxwich', rank:'Ranger', amount:11.99, status:'paid', date:'2026-07-06'},
+    ],
+    players:[
+      {username:'Ferrikz', rank:'Ranger', spent:16.98, orders:2, online:true},
+      {username:'Bloxwich', rank:'Ranger', spent:16.98, orders:2, online:false},
+      {username:'NovaDusk', rank:'Archon', spent:34.99, orders:1, online:true},
+      {username:'Quillfeather', rank:'Warden', spent:19.99, orders:1, online:false},
+    ]
+  };
+}
+
+let data = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return defaultData();
+}
+function save(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+/* ---------------- NAV ---------------- */
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    item.classList.add('active');
+    const view = item.dataset.view;
+    document.getElementById('view-'+view).classList.add('active');
+    document.getElementById('pageTitle').innerText = view.toUpperCase();
+  });
+});
+
+/* ---------------- TOAST ---------------- */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------------- RENDER: DASHBOARD ---------------- */
+function renderDashboard(){
+  const totalRevenue = data.orders.filter(o=>o.status==='paid').reduce((s,o)=>s+o.amount,0);
+  const totalOrders = data.orders.length;
+  const activePlayers = data.players.filter(p=>p.online).length;
+  const avgOrder = totalOrders ? (totalRevenue/data.orders.filter(o=>o.status==='paid').length || 0) : 0;
+
+  const stats = [
+    {label:'Total revenue', value:'$'+totalRevenue.toFixed(2), delta:'+12.4% this week', dir:'up'},
+    {label:'Orders', value:totalOrders, delta:'+3 today', dir:'up'},
+    {label:'Players online', value:activePlayers, delta:'live', dir:'up'},
+    {label:'Avg. order value', value:'$'+avgOrder.toFixed(2), delta:'-1.1% this week', dir:'down'},
+  ];
+  document.getElementById('statGrid').innerHTML = stats.map(s=>`
+    <div class="stat-card">
+      <div class="label">${s.label}</div>
+      <div class="value">${s.value}</div>
+      <div class="delta ${s.dir}">${s.delta}</div>
+    </div>`).join('');
+
+  const recent = [...data.orders].slice(0,5);
+  document.getElementById('recentOrdersBody').innerHTML = recent.map(o=>`
+    <tr>
+      <td>${o.player}</td>
+      <td><span class="rank-pill">${o.rank}</span></td>
+      <td class="mono">$${o.amount.toFixed(2)}</td>
+      <td><span class="badge ${o.status}">${o.status}</span></td>
+      <td>${o.date}</td>
+    </tr>`).join('') || `<tr><td colspan="5" class="empty">No orders yet</td></tr>`;
+}
+
+/* ---------------- RENDER: RANKS ---------------- */
+function renderRanks(){
+  const body = document.getElementById('ranksBody');
+  if(!data.ranks.length){ body.innerHTML = `<tr><td colspan="5" class="empty">No ranks yet — create one to get started</td></tr>`; return; }
+  body.innerHTML = data.ranks.map(r=>`
+    <tr>
+      <td><strong>${r.name}</strong></td>
+      <td class="mono">$${Number(r.price).toFixed(2)}</td>
+      <td style="max-width:320px; color:var(--navy-soft); font-size:12.5px;">${r.perks.join(' · ')}</td>
+      <td><span class="badge ${r.active?'online':'offline'}">${r.active?'active':'hidden'}</span></td>
+      <td style="text-align:right;">
+        <button class="icon-btn" title="Toggle visibility" onclick="toggleRank(${r.id})">◐</button>
+        <button class="icon-btn" title="Edit" onclick="openRankModal(${r.id})">✎</button>
+        <button class="icon-btn danger" title="Delete" onclick="deleteRank(${r.id})">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+let editingRankId = null;
+function openRankModal(id){
+  editingRankId = id || null;
+  document.getElementById('rankModalTitle').innerText = id ? 'Edit rank' : 'New rank';
+  if(id){
+    const r = data.ranks.find(r=>r.id===id);
+    document.getElementById('rankName').value = r.name;
+    document.getElementById('rankPrice').value = r.price;
+    document.getElementById('rankPerks').value = r.perks.join('\n');
+  } else {
+    document.getElementById('rankName').value = '';
+    document.getElementById('rankPrice').value = '';
+    document.getElementById('rankPerks').value = '';
+  }
+  document.getElementById('rankModalOverlay').classList.add('open');
+}
+function closeRankModal(){
+  document.getElementById('rankModalOverlay').classList.remove('open');
+}
+function saveRank(){
+  const name = document.getElementById('rankName').value.trim();
+  const price = parseFloat(document.getElementById('rankPrice').value);
+  const perks = document.getElementById('rankPerks').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!name || isNaN(price)){ toast('Enter a name and price'); return; }
+
+  if(editingRankId){
+    const r = data.ranks.find(r=>r.id===editingRankId);
+    r.name = name; r.price = price; r.perks = perks;
+    toast('Rank updated');
+  } else {
+    const id = Math.max(0,...data.ranks.map(r=>r.id))+1;
+    data.ranks.push({id, name, price, perks, active:true});
+    toast('Rank created');
+  }
+  save(); renderRanks(); closeRankModal();
+}
+function toggleRank(id){
+  const r = data.ranks.find(r=>r.id===id);
+  r.active = !r.active;
+  save(); renderRanks();
+  toast(r.active ? 'Rank is now visible' : 'Rank hidden from store');
+}
+function deleteRank(id){
+  if(!confirm('Delete this rank? This cannot be undone.')) return;
+  data.ranks = data.ranks.filter(r=>r.id!==id);
+  save(); renderRanks();
+  toast('Rank deleted');
+}
+
+/* ---------------- RENDER: ORDERS ---------------- */
+function renderOrders(filter=''){
+  const body = document.getElementById('ordersBody');
+  const rows = data.orders.filter(o=>o.player.toLowerCase().includes(filter.toLowerCase()));
+  if(!rows.length){ body.innerHTML = `<tr><td colspan="7" class="empty">No matching orders</td></tr>`; return; }
+  body.innerHTML = rows.map(o=>`
+    <tr>
+      <td class="mono">${o.id}</td>
+      <td>${o.player}</td>
+      <td><span class="rank-pill">${o.rank}</span></td>
+      <td class="mono">$${o.amount.toFixed(2)}</td>
+      <td><span class="badge ${o.status}">${o.status}</span></td>
+      <td>${o.date}</td>
+      <td style="text-align:right;">
+        ${o.status==='paid' ? `<button class="icon-btn danger" title="Refund" onclick="refundOrder('${o.id}')">↺</button>` : ''}
+        ${o.status==='pending' ? `<button class="icon-btn" title="Mark paid" onclick="markPaid('${o.id}')">✓</button>` : ''}
+      </td>
+    </tr>`).join('');
+}
+function refundOrder(id){
+  const o = data.orders.find(o=>o.id===id);
+  o.status = 'refunded';
+  save(); renderOrders(document.getElementById('orderSearch').value); renderDashboard();
+  toast('Order refunded');
+}
+function markPaid(id){
+  const o = data.orders.find(o=>o.id===id);
+  o.status = 'paid';
+  save(); renderOrders(document.getElementById('orderSearch').value); renderDashboard();
+  toast('Order marked as paid');
+}
+document.getElementById('orderSearch').addEventListener('input', e=>renderOrders(e.target.value));
+
+/* ---------------- RENDER: PLAYERS ---------------- */
+function renderPlayers(filter=''){
+  const body = document.getElementById('playersBody');
+  const rows = data.players.filter(p=>p.username.toLowerCase().includes(filter.toLowerCase()));
+  if(!rows.length){ body.innerHTML = `<tr><td colspan="5" class="empty">No matching players</td></tr>`; return; }
+  body.innerHTML = rows.map(p=>`
+    <tr>
+      <td><strong>${p.username}</strong></td>
+      <td><span class="rank-pill">${p.rank}</span></td>
+      <td class="mono">$${p.spent.toFixed(2)}</td>
+      <td>${p.orders}</td>
+      <td><span class="badge ${p.online?'online':'offline'}">${p.online?'online':'offline'}</span></td>
+    </tr>`).join('');
+}
+document.getElementById('playerSearch').addEventListener('input', e=>renderPlayers(e.target.value));
+
+/* ---------------- SETTINGS ---------------- */
+function renderSettings(){
+  document.getElementById('settingIp').value = data.settings.ip;
+  document.getElementById('settingName').value = data.settings.name;
+  document.getElementById('settingDiscord').value = data.settings.discord;
+}
+function saveSettings(){
+  data.settings.ip = document.getElementById('settingIp').value.trim();
+  data.settings.name = document.getElementById('settingName').value.trim();
+  data.settings.discord = document.getElementById('settingDiscord').value.trim();
+  save();
+  toast('Settings saved');
+}
+
+/* ---------------- INIT ---------------- */
+function renderAll(){
+  renderDashboard();
+  renderRanks();
+  renderOrders();
+  renderPlayers();
+  renderSettings();
+}
+renderAll();
+</script>
+</body>
+</html>
